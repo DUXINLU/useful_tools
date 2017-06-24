@@ -18,8 +18,13 @@ def handle_client(sock):
 
         while True:
             try:
-                res_data = sock.recv(1024)
-                print 'Response:' + res_data
+                data = ''
+                data_ = sock.recv(1024)
+                if not data_:
+                    break
+                data += data_
+
+                print data
             except:
                 break
 
