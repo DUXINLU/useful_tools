@@ -119,57 +119,36 @@ def start_task(task_name):
         # 文件里啥也没有  说明当前没有任务在计时
         if not f.read():
             f.close()
+
+            def handle_exit(signum, _):
+                if signum == signal.SIGTERM:
+                    sys.exit(0)
+                sys.exit(1)
+
+            signal.signal(signal.SIGINT, handle_exit)
+            signal.signal(signal.SIGTERM, handle_exit)
+
             pid = os.fork()
 
-            # 子进程
-            if pid == 0:
-                child_pid = os.getpid()
-                print('pid:' + str(child_pid))
-                f = open('pid_time.txt', 'w+')
-                f.write(str(child_pid) + '\n' + str(int(time.time())))
-                f.close()
-
-                #########################
-                def handle_exit(signum, _):
-                    if signum == signal.SIGTERM:
-                        sys.exit(0)
-                    sys.exit(1)
-
-                signal.signal(signal.SIGINT, handle_exit)
-                signal.signal(signal.SIGTERM, handle_exit)
-
-                # fork only once because we are sure parent will exit
-                pid = os.fork()
-                assert pid != -1
-
-                if pid > 0:
-                    # parent waits for its child
-                    time.sleep(5)
-                    sys.exit(0)
-
-                # child signals its parent to exit
-                ppid = os.getppid()
-                pid = os.getpid()
-                if write_pid_file(pid_file, pid) != 0:
-                    os.kill(ppid, signal.SIGINT)
-                    sys.exit(1)
-
-                os.setsid()
-                signal.signal(signal.SIG_IGN, signal.SIGHUP)
-
-                print('started')
-                os.kill(ppid, signal.SIGTERM)
-                #########################
-
-                os.setsid()
-                signal.signal(signal.SIG_IGN, signal.SIGHUP)
-
-                print('Timing started.')
-
             # 父进程
-            else:
-                time.sleep(1)
-                os._exit(0)
+            if pid > 0:
+                time.sleep(5)
+                sys.exit(0)
+
+            # 子进程
+            ppid = os.getppid()
+            pid = os.getpid()
+
+            if write_pid_file(pid) != 0:
+                os.kill(ppid, signal.SIGINT)
+                sys.exit(1)
+
+            os.setsid()
+            signal.signal(signal.SIG_IGN, signal.SIGHUP)
+
+            print('Timing started.')
+            os.kill(ppid, signal.SIGTERM)
+        # 文件中有ID号 说明有程序正在运行
         else:
             f.close()
             print('A task is still timing, stop it first.')
@@ -178,6 +157,17 @@ def start_task(task_name):
         print('Task dose not exists. U can try -n to create a task.')
 
     db.close()
+
+
+def write_pid_file(pid):
+    print('pid:' + str(pid))
+    try:
+        f = open('pid_time.txt', 'w+')
+        f.write(str(pid) + '\n' + str(int(time.time())))
+        f.close()
+        return 0
+    except:
+        return -1
 
 
 def end_task(task_name):
