@@ -1,28 +1,27 @@
 #include<stdio.h>
-#include<math>
 
-#define M 3	//约束个数
-#define N 5	//变量个数
-
-//Z=CX
-//AX=b
-
-float A[M][N]={0};	//约束系数矩阵
-float z=0;			//目标函数值
-float C[N]={0};		//目标函数系数向量
-float X[N]={0};		//变量取值
-float b[M]={0};		//约束常数向量
-float B[M]={0};		//哪些列是基、每个元素都是列数，从0
-float CB[M]={0};	//记录基变量对应的优化函数系数
-float delta[M]={0};	//检验数向量
-float theta[M]={0};	//出基变量的确认
-
-void make_RE(float A[M][N],float b[M],float B[M]){
-	for(int i=0;i<M;i++){
-		if(A[i][i]!=1){
-			
+void get_leave(int A[][5], int b[], int C[], int Xn[], int Xb[]) {
+	int delta[2];
+	for (int i = 0; i < 2; i++) {
+		int _ = 0;
+		for (int j = 0; j < 3; j++) {
+			_ += A[j][Xn[i]] * C[Xb[j]];
 		}
+		printf("_:%d\n", _);
+		delta[i] = C[Xn[i]] - _;
+		printf("%d\n", delta[i]);
 	}
 }
 
+int main() {
+	int A[3][5] = { {1,1,1,0,0},{2,1,0,1,0},{1,0,0,0,1} };
+	int b[3] = { 8,10,4 };
+	int C[5] = { 8,6,0,0,0 };
+	int Xb[3] = { 2,3,4 };
+	int Xn[2] = { 0,1 };
 
+	get_leave(A, b, C, Xn,Xb);
+
+	getchar();
+	return 0;
+}
